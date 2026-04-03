@@ -22,7 +22,11 @@ export default function Navbar() {
             href="/"
             className="max-w-[220px] text-base font-semibold leading-snug tracking-tight text-slate-900 sm:max-w-none sm:text-2xl"
           >
-            इयत्ता १० वी - बॅच २००८ Get Together
+            <span className="sm:hidden">
+              इयत्ता १० वी - बॅच २००८
+              <span className="block">Get Together</span>
+            </span>
+            <span className="hidden sm:inline">इयत्ता १० वी - बॅच २००८ Get Together</span>
           </Link>
 
           <div className="hidden items-center gap-2 rounded-full bg-slate-50/90 p-1.5 text-sm font-medium text-slate-600 md:flex">
