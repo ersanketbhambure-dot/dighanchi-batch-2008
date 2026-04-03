@@ -1,18 +1,16 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type FormData = {
   name: string;
-  phone: string;
   attending: string;
 };
 
 type NameRow = {
   id: number;
   name: string | null;
-  phone: string | null;
   attending: string | null;
   created_at: string;
 };
@@ -34,7 +32,6 @@ function isPendingAttendingValue(value: string | null) {
 
 const initialFormData: FormData = {
   name: "",
-  phone: "",
   attending: "Yes",
 };
 
@@ -44,10 +41,25 @@ export default function RsvpPage() {
   const [latestRowsByName, setLatestRowsByName] = useState<Record<string, NameRow>>(
     {},
   );
+  const [nameSearch, setNameSearch] = useState("");
+  const [isNameListOpen, setIsNameListOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingNames, setIsLoadingNames] = useState(false);
+  const normalizedTypedName = (formData.name || nameSearch).trim();
+
+  const filteredNameOptions = useMemo(() => {
+    const normalizedSearch = nameSearch.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return nameOptions;
+    }
+
+    return nameOptions.filter((name) =>
+      name.toLowerCase().includes(normalizedSearch),
+    );
+  }, [nameOptions, nameSearch]);
 
   useEffect(() => {
     async function loadNames() {
@@ -60,7 +72,7 @@ export default function RsvpPage() {
 
       const { data, error } = await supabase
         .from("rsvps")
-        .select("id, name, phone, attending, created_at")
+        .select("id, name, attending, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -86,7 +98,6 @@ export default function RsvpPage() {
       }
 
       const namesToUse = Object.values(latestMap)
-        .filter((row) => isPendingAttendingValue(row.attending))
         .map((row) => row.name as string)
         .sort((firstName, secondName) => firstName.localeCompare(secondName));
 
@@ -114,33 +125,25 @@ export default function RsvpPage() {
       return;
     }
 
-    const selectedRow = latestRowsByName[formData.name];
+    const normalizedName = formData.name.trim() || nameSearch.trim();
 
-    if (!selectedRow?.id) {
-      setErrorMessage("Selected name was not found in the existing list.");
+    if (!normalizedName) {
+      setErrorMessage("Please select a name or type your name.");
       return;
     }
 
-    const normalizedPhone = formData.phone.trim();
-
-    if (!/^\d{10}$/.test(normalizedPhone)) {
-      setErrorMessage("Please enter a valid 10-digit mobile number.");
-      return;
-    }
+    const selectedRow = latestRowsByName[normalizedName];
 
     setIsSubmitting(true);
 
     const payload = {
-      phone: normalizedPhone,
+      name: normalizedName,
       attending: formData.attending,
     };
 
-    console.log("RSVP Update Data:", { id: selectedRow.id, ...payload });
-
-    const { error } = await supabase
-      .from("rsvps")
-      .update(payload)
-      .eq("id", selectedRow.id);
+    const { error } = selectedRow?.id
+      ? await supabase.from("rsvps").update({ attending: payload.attending }).eq("id", selectedRow.id)
+      : await supabase.from("rsvps").insert(payload);
 
     if (error) {
       setErrorMessage(error.message);
@@ -148,12 +151,33 @@ export default function RsvpPage() {
       return;
     }
 
-    setSuccessMessage("Your RSVP has been updated successfully.");
-    setFormData(initialFormData);
-    setIsSubmitting(false);
-    setNameOptions((currentNames) =>
-      currentNames.filter((name) => name !== formData.name),
+    setSuccessMessage(
+      selectedRow?.id
+        ? "Your RSVP has been updated successfully."
+        : "Your name has been added and RSVP saved successfully.",
     );
+    setFormData(initialFormData);
+    setNameSearch("");
+    setIsNameListOpen(false);
+    setIsSubmitting(false);
+    setNameOptions((currentNames) => {
+      const updatedNames = selectedRow?.id
+        ? currentNames
+        : Array.from(new Set([...currentNames, normalizedName]));
+
+      return updatedNames.sort((firstName, secondName) =>
+        firstName.localeCompare(secondName),
+      );
+    });
+    setLatestRowsByName((currentRows) => ({
+      ...currentRows,
+      [normalizedName]: {
+        id: selectedRow?.id ?? currentRows[normalizedName]?.id ?? 0,
+        name: normalizedName,
+        attending: payload.attending,
+        created_at: currentRows[normalizedName]?.created_at ?? new Date().toISOString(),
+      },
+    }));
   }
 
   return (
@@ -200,48 +224,58 @@ export default function RsvpPage() {
             >
               Name
             </label>
-            <select
-              id="name"
-              value={formData.name}
-              onChange={(event) =>
-                setFormData({ ...formData, name: event.target.value })
-              }
-              disabled={isLoadingNames || nameOptions.length === 0}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 px-5 py-4 text-lg text-slate-900 outline-none transition focus:border-amber-300 focus:bg-white"
-            >
-              <option value="">
-                {nameOptions.length === 0 ? "No names available" : "Select Name"}
-              </option>
-              {nameOptions.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <input
+                id="name"
+                type="text"
+                value={formData.name || nameSearch}
+                onChange={(event) => {
+                  setFormData((currentFormData) => ({
+                    ...currentFormData,
+                    name: "",
+                  }));
+                  setNameSearch(event.target.value);
+                  setIsNameListOpen(true);
+                }}
+                onFocus={() => setIsNameListOpen(true)}
+                disabled={isLoadingNames}
+                placeholder={
+                  nameOptions.length === 0 ? "No names available" : "Type Name"
+                }
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 px-5 py-4 text-lg text-slate-900 outline-none transition focus:border-amber-300 focus:bg-white"
+                autoComplete="off"
+              />
+
+              {isNameListOpen && filteredNameOptions.length > 0 && (
+                <div className="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                  {filteredNameOptions.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => {
+                        setFormData((currentFormData) => ({
+                          ...currentFormData,
+                          name,
+                        }));
+                        setNameSearch("");
+                        setIsNameListOpen(false);
+                      }}
+                      className="block w-full rounded-xl px-4 py-3 text-left text-base text-slate-700 transition hover:bg-slate-50"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {isLoadingNames && (
               <p className="text-sm text-slate-500">Loading names...</p>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="phone"
-              className="block text-sm font-semibold uppercase tracking-[0.14em] text-slate-500"
-            >
-              Phone Number
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              placeholder="Enter 10-digit mobile number"
-              value={formData.phone}
-              onChange={(event) =>
-                setFormData({ ...formData, phone: event.target.value })
-              }
-              inputMode="numeric"
-              maxLength={10}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 px-5 py-4 text-lg text-slate-900 outline-none transition focus:border-amber-300 focus:bg-white"
-            />
+            {!isLoadingNames && isNameListOpen && filteredNameOptions.length === 0 && (
+              <p className="text-sm text-slate-500">
+                No matching names found. You can type your name and submit it.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -278,7 +312,7 @@ export default function RsvpPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting || !formData.name}
+            disabled={isSubmitting || !normalizedTypedName}
             className="inline-flex w-full items-center justify-center rounded-full bg-sky-200 px-8 py-4 text-base font-semibold text-sky-950 shadow-lg shadow-sky-200/70 transition hover:-translate-y-0.5 hover:bg-sky-300 sm:w-auto sm:min-w-[220px]"
           >
             {isSubmitting ? "Saving..." : "नोंदवा"}
