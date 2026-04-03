@@ -107,7 +107,7 @@ export default function Home() {
             </h2>
             <p className="mt-3 text-base leading-7 text-slate-600">
               हसरे क्षण, जुन्या आठवणी आणि मनात कायम राहतील असे सुंदर
-              अनुभवांनी भरलेली एक खास संध्याकाळ.
+              अनुभवांनी भरलेला एक खास दिवस.
             </p>
           </div>
 
