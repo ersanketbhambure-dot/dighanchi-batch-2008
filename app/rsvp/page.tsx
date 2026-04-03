@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type FormData = {
@@ -36,6 +36,7 @@ const initialFormData: FormData = {
 };
 
 export default function RsvpPage() {
+  const nameFieldRef = useRef<HTMLDivElement | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [nameOptions, setNameOptions] = useState<string[]>([]);
   const [latestRowsByName, setLatestRowsByName] = useState<Record<string, NameRow>>(
@@ -111,6 +112,23 @@ export default function RsvpPage() {
     }
 
     loadNames();
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        nameFieldRef.current &&
+        !nameFieldRef.current.contains(event.target as Node)
+      ) {
+        setIsNameListOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -218,13 +236,20 @@ export default function RsvpPage() {
           className="space-y-6 rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-[0_35px_80px_-40px_rgba(15,23,42,0.45)] backdrop-blur sm:p-8"
         >
           <div className="space-y-2">
-            <label
-              htmlFor="name"
-              className="block text-sm font-semibold uppercase tracking-[0.14em] text-slate-500"
-            >
-              Name
-            </label>
-            <div className="relative">
+            <div className="flex items-center justify-between gap-3">
+              <label
+                htmlFor="name"
+                className="block text-sm font-semibold uppercase tracking-[0.14em] text-slate-500"
+              >
+                Name
+              </label>
+              {!isLoadingNames && (
+                <p className="w-fit rounded-2xl border border-sky-100 bg-sky-50/80 px-4 py-2 text-sm font-medium text-sky-800">
+                  * तुमचे नाव टाइप करून नोंदवा
+                </p>
+              )}
+            </div>
+            <div ref={nameFieldRef} className="relative">
               <input
                 id="name"
                 type="text"
@@ -270,11 +295,6 @@ export default function RsvpPage() {
             </div>
             {isLoadingNames && (
               <p className="text-sm text-slate-500">Loading names...</p>
-            )}
-            {!isLoadingNames && isNameListOpen && filteredNameOptions.length === 0 && (
-              <p className="text-sm text-slate-500">
-                No matching names found. You can type your name and submit it.
-              </p>
             )}
           </div>
 

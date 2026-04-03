@@ -249,7 +249,7 @@ export default async function PeoplePage() {
 
                 <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50/90 px-4 py-3">
                   <span className="text-sm font-medium text-slate-500">
-                    वर्गणी (₹1000)
+                    वर्गणी (₹1500)
                   </span>
                   <span
                     className={`inline-flex shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold ${contributionStatusClasses[person.contributionStatus]}`}
