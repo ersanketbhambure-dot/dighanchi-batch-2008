@@ -15,7 +15,7 @@ const marathiSans = Noto_Sans_Devanagari({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dighanchi-batch-2008.vercel.app"),
-  title: "इयत्ता १० वी - बॅच २००८",
+  title: "इयत्ता १० वी - बॅच २००८ Get Together",
   description: "Diganchi HighSchool Diganchi - Batch 2008 reunion website",
   icons: {
     icon: "/icon.svg",
@@ -23,10 +23,10 @@ export const metadata: Metadata = {
     apple: "/icon.svg",
   },
   openGraph: {
-    title: "इयत्ता १० वी - बॅच २००८",
+    title: "इयत्ता १० वी - बॅच २००८ Get Together",
     description: "Diganchi HighSchool Diganchi - Batch 2008 reunion website",
     url: "https://dighanchi-batch-2008.vercel.app",
-    siteName: "इयत्ता १० वी - बॅच २००८",
+    siteName: "इयत्ता १० वी - बॅच २००८ Get Together",
     images: [
       {
         url: "/reunion-1.png",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "इयत्ता १० वी - बॅच २००८",
+    title: "इयत्ता १० वी - बॅच २००८ Get Together",
     description: "Diganchi HighSchool Diganchi - Batch 2008 reunion website",
     images: ["/reunion-1.png"],
   },

@@ -63,7 +63,7 @@ export default function Home() {
                 Time
               </p>
               <p className="mt-2 text-lg font-semibold text-slate-900">
-                11:00 AM onwards
+                09:00 AM onwards
               </p>
             </div>
             <div>
