@@ -14,8 +14,36 @@ const marathiSans = Noto_Sans_Devanagari({
 });
 
 export const metadata: Metadata = {
-  title: "Batch Reunion 2026",
-  description: "Reunion website for Diganchi High School Batch 2008",
+  metadataBase: new URL("https://dighanchi-batch-2008.vercel.app"),
+  title: "इयत्ता १० वी - बॅच २००८",
+  description: "Diganchi HighSchool Diganchi - Batch 2008 reunion website",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  openGraph: {
+    title: "इयत्ता १० वी - बॅच २००८",
+    description: "Diganchi HighSchool Diganchi - Batch 2008 reunion website",
+    url: "https://dighanchi-batch-2008.vercel.app",
+    siteName: "इयत्ता १० वी - बॅच २००८",
+    images: [
+      {
+        url: "/reunion-1.png",
+        width: 1200,
+        height: 630,
+        alt: "Diganchi HighSchool Diganchi - Batch 2008",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "इयत्ता १० वी - बॅच २००८",
+    description: "Diganchi HighSchool Diganchi - Batch 2008 reunion website",
+    images: ["/reunion-1.png"],
+  },
 };
 
 export default function RootLayout({
